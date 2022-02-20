@@ -1,34 +1,17 @@
 <script>
-	import Taskbar from './desktop/Taskbar.svelte';
-	import Swindow from './desktop/Swindow.svelte'
+	import Taskbar from './components/Taskbar.svelte';
+	import Swindow from './components/Swindow.svelte'
 
 	let dragOrigin;
 	let mousePosition;
 
 	$: dragDelta = dragOrigin ? { x: dragOrigin.x - mousePosition.x, y: dragOrigin.y - mousePosition.y } : null;
 	
-	let activeWindowId = 1;
+	let activeWindowId;
 	let heldWindowId;
 	let heldWindowOrigin;
 
-	let swindows = [
-		{
-			id: 1,
-			x: 200,
-			y: 200,
-			width: 200,
-			height: 100,
-			title: 'Example 1'
-		},
-		{
-			id: 2,
-			x: 300,
-			y: 150,
-			width: 200,
-			height: 100,
-			title: 'Example 2'
-		}
-	];
+	let swindows = [];
 
 	function selectWindow(event) {
 		activeWindowId = event.detail.id;
@@ -36,6 +19,7 @@
 
 	function closeWindow(event) {
 		swindows = swindows.filter((swindow) => swindow.id !== event.detail.id);
+		activeWindowId = swindows.map((s) => s.id)[swindows.length - 1];
 	}
 
 	function initWindowMove(event) {
@@ -75,6 +59,20 @@
 			}
 		});
 	}
+
+	function runApp(event) {
+		let newWindow = {
+				id: swindows.length > 0 ? (Math.max(...swindows.map((s) => s.id))) + 1 : 0,
+				x: 10 + Math.floor(Math.random() * 100),
+				y: 10 + Math.floor(Math.random() * 100),
+				width: 300 + Math.floor(Math.random() * 200),
+				height: 200 + Math.floor(Math.random() * 200),
+				title: `App ${event.detail.id}`
+		}
+
+		swindows = swindows.concat([newWindow]);
+		activeWindowId = newWindow.id;
+	}
 </script>
 
 <main on:mousemove="{moveMouse}" on:mousedown="{initDrag}" on:mouseup="{endDrag}">
@@ -87,7 +85,7 @@
 			on:move="{initWindowMove}"
 		/>
 	{/each}
-	<Taskbar {swindows} />
+	<Taskbar {swindows} {activeWindowId} on:selectWindow="{selectWindow}" on:runApp="{runApp}" />
 </main>
 
 <style>
